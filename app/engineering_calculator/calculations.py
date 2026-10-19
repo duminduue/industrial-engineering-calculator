@@ -29,12 +29,20 @@ def _validate_positive(**values):
             raise ValueError(f"{name} must be greater than zero.")
 
 
+def _validate_result(result):
+    """Reject calculation results that are not finite numbers."""
+    if not math.isfinite(result):
+        raise ValueError("Calculation result is too large or not finite.")
+    return result
+
+
+
 # MOTION AND KINEMATICS
 
 def calculate_speed(distance_m, time_s):
     _validate_non_negative(distance_m=distance_m)
     _validate_positive(time_s=time_s)
-    return distance_m / time_s
+    return _validate_result(distance_m / time_s)
 
 
 def calculate_acceleration(initial_velocity_m_s, final_velocity_m_s, time_s):
@@ -84,7 +92,7 @@ def calculate_force(mass_kg, acceleration_m_s2):
         mass_kg=mass_kg,
         acceleration_m_s2=acceleration_m_s2,
     )
-    return mass_kg * acceleration_m_s2
+    return _validate_result(mass_kg * acceleration_m_s2)
 
 
 def calculate_weight(mass_kg, gravity_m_s2=9.80665):
@@ -145,12 +153,22 @@ def calculate_centripetal_force(mass_kg, velocity_m_s, radius_m):
     return mass_kg * velocity_m_s**2 / radius_m
 
 
+
 def calculate_kinetic_energy(mass_kg, velocity_m_s):
     _validate_non_negative(
         mass_kg=mass_kg,
         velocity_m_s=velocity_m_s,
     )
-    return 0.5 * mass_kg * velocity_m_s**2
+
+    try:
+        result = 0.5 * mass_kg * velocity_m_s**2
+    except OverflowError as exc:
+        raise ValueError(
+            "Calculation result is too large or not finite."
+        ) from exc
+
+    return _validate_result(result)
+
 
 
 def calculate_potential_energy(mass_kg, height_m, gravity_m_s2=9.80665):

@@ -18,10 +18,179 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("⚙️ Industrial Engineering Calculator")
-st.caption(
-    "Engineering calculations, unit conversion, and learning in one place."
+theme_choice = st.sidebar.radio(
+    "Appearance",
+    ["Dark", "Light"],
+    horizontal=True,
+    key="appearance_theme",
+    help="Choose the application colour theme.",
 )
+
+if theme_choice == "Dark":
+    theme_css = """
+    :root {
+        --ie-bg: #0b111b;
+        --ie-bg-soft: #101827;
+        --ie-panel: #111b2a;
+        --ie-panel-soft: rgba(22, 34, 51, .86);
+        --ie-border: rgba(148, 163, 184, .20);
+        --ie-text: #edf4fb;
+        --ie-muted: #9baec2;
+        --ie-accent: #55d6be;
+        --ie-accent-strong: #22b8a2;
+        --ie-input: #0b1421;
+    }
+    """
+else:
+    theme_css = """
+    :root {
+        --ie-bg: #f4f7fb;
+        --ie-bg-soft: #edf3fa;
+        --ie-panel: #ffffff;
+        --ie-panel-soft: rgba(255, 255, 255, .94);
+        --ie-border: rgba(51, 75, 105, .18);
+        --ie-text: #142338;
+        --ie-muted: #60738b;
+        --ie-accent: #087e8b;
+        --ie-accent-strong: #066b77;
+        --ie-input: #ffffff;
+    }
+    """
+
+st.markdown(
+    f"""
+    <style>
+    {theme_css}
+    .stApp {{
+        color: var(--ie-text);
+        background:
+            radial-gradient(
+                ellipse at 8% 0%,
+                color-mix(in srgb, var(--ie-accent) 10%, transparent),
+                transparent 36%
+            ),
+            linear-gradient(160deg, var(--ie-bg) 0%, var(--ie-bg-soft) 100%);
+    }}
+    [data-testid="stSidebar"] {{
+        background: var(--ie-bg);
+        border-right: 1px solid var(--ie-border);
+    }}
+    [data-testid="stSidebar"] > div:first-child {{ padding-top: 1.1rem; }}
+    [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {{
+        letter-spacing: -.025em;
+        font-weight: 750;
+    }}
+    .block-container {{
+        max-width: 1480px;
+        padding-top: 1.5rem;
+        padding-bottom: 2.6rem;
+    }}
+    h1, h2, h3 {{ letter-spacing: -.035em; color: var(--ie-text); }}
+    h1 {{ font-weight: 800 !important; line-height: 1.12 !important; }}
+    h2 {{ font-weight: 760 !important; }}
+    p, label, [data-testid="stMarkdownContainer"] {{ line-height: 1.55; }}
+    [data-testid="stMetric"] {{
+        background: var(--ie-panel-soft);
+        border: 1px solid var(--ie-border);
+        border-radius: 16px;
+        padding: 17px 20px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, .06);
+        min-height: 108px;
+    }}
+    [data-testid="stMetricLabel"] {{ color: var(--ie-muted); font-weight: 650; }}
+    [data-testid="stMetricValue"] {{ color: var(--ie-accent); font-weight: 800; }}
+    [data-testid="stForm"], [data-testid="stExpander"] {{
+        background: var(--ie-panel-soft);
+        border: 1px solid var(--ie-border);
+        border-radius: 14px;
+    }}
+    [data-testid="stExpander"] summary {{ font-weight: 650; }}
+    div.stButton > button,
+    div.stFormSubmitButton > button,
+    div.stDownloadButton > button {{
+        border-radius: 10px; min-height: 2.65rem; font-weight: 700;
+        border: 1px solid var(--ie-border);
+        transition:
+            border-color 150ms ease,
+            transform 150ms ease,
+            box-shadow 150ms ease;
+    }}
+    div.stButton > button:hover,
+    div.stFormSubmitButton > button:hover,
+    div.stDownloadButton > button:hover {{
+        border-color: var(--ie-accent); transform: translateY(-1px);
+        box-shadow: 0 5px 18px color-mix(in srgb, var(--ie-accent) 12%, transparent);
+    }}
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="textarea"] > div {{
+        border-radius: 9px; background-color: var(--ie-input);
+    }}
+    .ie-eyebrow {{
+        color: var(--ie-accent);
+        font-size: .72rem;
+        font-weight: 850;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        margin-bottom: .55rem;
+    }}
+    .ie-subtitle {{
+        color: var(--ie-muted);
+        font-size: 1.02rem;
+        margin-top: -.45rem;
+        margin-bottom: 1.1rem;
+    }}
+    .ie-section-label {{
+        color: var(--ie-accent);
+        font-size: .73rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        margin-bottom: .4rem;
+    }}
+    .ie-ai-card {{
+        background: var(--ie-panel-soft);
+        border: 1px solid var(--ie-border);
+        border-radius: 15px;
+        padding: 1rem;
+        min-height: 145px;
+    }}
+    .ie-ai-kicker {{
+        color: var(--ie-accent);
+        font-size: .75rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }}
+    hr {{ margin: .75rem 0 !important; border-color: var(--ie-border) !important; }}
+    [data-testid="stVerticalBlock"] {{ gap: .8rem; }}
+    [data-testid="stAlert"] {{ border-radius: 12px; }}
+    @media (max-width: 768px) {{
+        .block-container {{ padding-top: 1rem; }}
+        h1 {{ font-size: 1.85rem !important; }}
+        [data-testid="stMetric"] {{
+            padding: 13px 14px;
+            min-height: 95px;
+        }}
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    '<div class="ie-eyebrow">ENGINEERING WORKSPACE / CALCULATION SUITE</div>',
+    unsafe_allow_html=True,
+)
+st.title("Industrial Engineering Calculator")
+st.markdown(
+    (
+        '<div class="ie-subtitle">A focused workspace for engineering '
+        'calculations, unit conversion, and technical learning.</div>'
+    ),
+    unsafe_allow_html=True,
+)
+
 
 BASE_UNITS = {
     "length": "m",
@@ -72,10 +241,7 @@ def search_formulas(query, category_filter):
     results = []
 
     for item in all_formulas():
-        if (
-            category_filter != "All categories"
-            and item["category"] != category_filter
-        ):
+        if category_filter != "All categories" and item["category"] != category_filter:
             continue
 
         searchable = " ".join(
@@ -189,10 +355,7 @@ def show_educational_solution(
     st.markdown("**2. Identify the given values**")
 
     for item in entered_inputs:
-        st.write(
-            f"- **{item['label']}:** "
-            f"{item['value']} {item['unit']}"
-        )
+        st.write(f"- **{item['label']}:** {item['value']} {item['unit']}")
 
     st.markdown("**3. Substitute the values**")
 
@@ -221,9 +384,7 @@ def show_educational_solution(
             f"= **{format_number(output_result)} {output_unit}**"
         )
 
-    st.success(
-        f"Final answer: {format_number(output_result)} {output_unit}"
-    )
+    st.success(f"Final answer: {format_number(output_result)} {output_unit}")
 
     with st.expander("📚 More information"):
         st.write(details.get("explanation", details["description"]))
@@ -237,7 +398,7 @@ def show_educational_solution(
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Calculator", "Unit Converter", "Calculation History"],
+    ["Calculator", "Unit Converter", "Calculation History", "AI Assistant (Preview)"],
 )
 
 
@@ -246,6 +407,19 @@ page = st.sidebar.radio(
 # ==================================================
 
 if page == "Calculator":
+    formula_count = sum(len(items) for items in FORMULA_REGISTRY.values())
+    category_count = len(FORMULA_REGISTRY)
+    try:
+        saved_count = len(get_history())
+    except (OSError, ValueError, TypeError):
+        saved_count = 0
+
+    overview = st.columns(3)
+    overview[0].metric("Available formulas", formula_count)
+    overview[1].metric("Engineering categories", category_count)
+    overview[2].metric("Saved calculations", saved_count)
+    st.markdown('<div style="height: 0.25rem"></div>', unsafe_allow_html=True)
+
     st.sidebar.divider()
     st.sidebar.subheader("Formula Library")
 
@@ -265,10 +439,7 @@ if page == "Calculator":
         st.warning("No formulas found. Try another keyword.")
         st.stop()
 
-    labels = [
-        f"{item['category']} — {item['name']}"
-        for item in matches
-    ]
+    labels = [f"{item['category']} — {item['name']}" for item in matches]
 
     selected_label = st.sidebar.selectbox("Formula", labels)
     selected = matches[labels.index(selected_label)]
@@ -277,12 +448,14 @@ if page == "Calculator":
     formula = selected["name"]
     details = FORMULA_REGISTRY[category][formula]
 
-    st.divider()
+    st.markdown(
+        '<div class="ie-section-label">SELECTED ENGINEERING FORMULA</div>',
+        unsafe_allow_html=True,
+    )
     st.subheader(formula)
-    st.caption(f"Category: {category}")
+    st.caption(f"{category}  ·  Standard result unit: {details['unit']}")
     st.write(details["description"])
     st.latex(details["equation"])
-    st.caption(f"Standard result unit: {details['unit']}")
 
     with st.expander("📖 Learn before calculating"):
         st.write(details.get("explanation", details["description"]))
@@ -347,10 +520,7 @@ if page == "Calculator":
                 else:
                     choices = units_for(dimension, default_unit)
 
-                    if (
-                        len(choices) > 1
-                        and not temperature_conversion
-                    ):
+                    if len(choices) > 1 and not temperature_conversion:
                         selected_unit = st.selectbox(
                             f"{label} unit",
                             choices,
@@ -375,10 +545,7 @@ if page == "Calculator":
         output_dimension = details["output_dimension"]
         output_choices = units_for(output_dimension, details["unit"])
 
-        if (
-            len(output_choices) > 1
-            and not temperature_conversion
-        ):
+        if len(output_choices) > 1 and not temperature_conversion:
             output_unit = st.selectbox(
                 "Output unit",
                 output_choices,
@@ -411,17 +578,12 @@ if page == "Calculator":
             ):
                 if dimension == "resistance_list":
                     calculation_values.append(
-                        [
-                            to_base_unit(v, unit, "resistance")
-                            for v in value
-                        ]
+                        [to_base_unit(v, unit, "resistance") for v in value]
                     )
                 elif temperature_conversion:
                     calculation_values.append(value)
                 else:
-                    calculation_values.append(
-                        to_base_unit(value, unit, dimension)
-                    )
+                    calculation_values.append(to_base_unit(value, unit, dimension))
 
             result = details["function"](*calculation_values)
 
@@ -482,9 +644,7 @@ if page == "Calculator":
                 )
                 st.success("Calculation saved to history.")
             except (OSError, ValueError, TypeError) as error:
-                st.warning(
-                    f"Calculation succeeded, but history saving failed: {error}"
-                )
+                st.warning(f"Calculation succeeded, but history saving failed: {error}")
 
         except (
             ValueError,
@@ -496,6 +656,78 @@ if page == "Calculator":
 
 
 # ==================================================
+# AI ASSISTANT PREVIEW
+# ==================================================
+
+elif page == "AI Assistant (Preview)":
+    st.markdown(
+        '<div class="ie-eyebrow">AI-READY WORKSPACE / PREVIEW</div>',
+        unsafe_allow_html=True,
+    )
+    st.title("Engineering AI Assistant")
+    st.markdown(
+        (
+            '<div class="ie-subtitle">A planned workspace for formula-aware '
+            'guidance, verified calculations, and engineering knowledge.</div>'
+        ),
+        unsafe_allow_html=True,
+    )
+    st.info(
+        "AI is not connected yet. This preview presents the planned workflow only; "
+        "it does not send prompts to an AI service or generate engineering answers."
+    )
+
+    ai_cols = st.columns(3)
+    ai_cards = [
+        (
+            "01 · FORMULA-AWARE",
+            "Find the right equation",
+            (
+                "Describe an engineering problem and identify candidate "
+                "formulas from the existing registry."
+            ),
+        ),
+        (
+            "02 · VERIFIED TOOLS",
+            "Calculate with Python",
+            (
+                "Use approved calculation functions, validated inputs, and "
+                "deterministic numerical results."
+            ),
+        ),
+        (
+            "03 · KNOWLEDGE LAYER",
+            "Explain with sources",
+            (
+                "Add trusted references and citations before enabling "
+                "source-based technical answers."
+            ),
+        ),
+    ]
+    for column, (kicker, title, description) in zip(ai_cols, ai_cards, strict=True):
+        with column:
+            st.markdown(
+                f'<div class="ie-ai-card"><div class="ie-ai-kicker">{kicker}</div>'
+                f"<h3>{title}</h3><p>{description}</p></div>",
+                unsafe_allow_html=True,
+            )
+
+    st.subheader("Planned assistant workflow")
+    st.markdown(
+        "1. Understand the engineering question.\n"
+        "2. Search the formula registry and ask for missing inputs.\n"
+        "3. Call an approved Python calculation function.\n"
+        "4. Show the equation, units, steps, assumptions, and any trusted sources."
+    )
+    st.caption(
+        
+            "Security principle: AI will not execute arbitrary Python code, "
+            "and API credentials will be kept out of source control."
+        
+    )
+
+
+# ==================================================
 # UNIT CONVERTER
 # ==================================================
 
@@ -503,9 +735,7 @@ elif page == "Unit Converter":
     st.subheader("🔁 Engineering Unit Converter")
     st.write("Convert compatible units without running a formula.")
 
-    dimensions_available = sorted(
-        {unit_data[0] for unit_data in UNITS.values()}
-    )
+    dimensions_available = sorted({unit_data[0] for unit_data in UNITS.values()})
 
     dimension = st.selectbox(
         "Quantity type",

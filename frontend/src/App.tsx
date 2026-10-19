@@ -16,6 +16,7 @@ type FieldConfig = {
   unit: string;
   min?: number;
   step?: string;
+  dimension?: string;
 };
 
 type Formula = {
@@ -26,7 +27,28 @@ type Formula = {
   unit: string;
   endpoint: string;
   fields: FieldConfig[];
+  inputKeys?: string[];
 };
+
+type FormulaApiItem = {
+  name: string;
+  category: string;
+  equation: string;
+  description: string;
+  unit: string;
+  output_dimension?: string;
+  inputs: { key: string; label: string; unit: string; dimension?: string }[];
+  input_keys: string[];
+};
+
+type FormulaListResponse = {
+  count: number;
+  formulas: FormulaApiItem[];
+  detail?: string;
+};
+
+type SolutionStep = { title: string; content: string };
+
 
 type ApiResult = {
   result?: number;
@@ -36,6 +58,9 @@ type ApiResult = {
   inputs?: Record<string, number>;
   distance_m?: number;
   time_s?: number;
+  steps?: SolutionStep[];
+  category?: string;
+  name?: string;
 };
 
 type HistoryRecord = {
@@ -67,7 +92,7 @@ function formatHistoryInput(value: unknown): string {
   return String(value ?? "—");
 }
 
-const formulas: Formula[] = [
+const fallbackFormulas: Formula[] = [
   {
     name: "Speed",
     category: "Motion",
@@ -175,10 +200,67 @@ const navigation: { name: Section; icon: string }[] = [
   { name: "AI Assistant", icon: "✳" },
 ];
 
+function getStudyExplanation(formula: Formula): { overview: string; interpretation: string; tips: string[] } {
+  const explanations: Record<string, { overview: string; interpretation: string; tips: string[] }> = {
+    Speed: {
+      overview: "Speed describes how much distance is covered in each unit of time. It is calculated by dividing distance by the time taken.",
+      interpretation: "A larger speed means more distance is covered in the same amount of time. Keep distance and time in compatible units.",
+      tips: ["Distance is the total path length used in this formula.", "Time must be greater than zero; division by zero is undefined.", "The standard SI unit of speed is metres per second (m/s)."],
+    },
+    Force: {
+      overview: "Newton’s second law states that the net force on an object equals its mass multiplied by its acceleration.",
+      interpretation: "The result is the force in the direction of the acceleration, assuming the supplied acceleration represents the net acceleration.",
+      tips: ["Mass is measured in kilograms (kg).", "Acceleration is measured in metres per second squared (m/s²).", "One newton (N) equals 1 kg·m/s²; 1 kN equals 1,000 N."],
+    },
+    Density: {
+      overview: "Density tells us how much mass is contained in a given volume. Divide the mass by the volume to calculate density.",
+      interpretation: "For the same volume, a greater mass means a greater density. For the same mass, a greater volume means a lower density.",
+      tips: ["Use mass and volume units that match the output unit you want.", "Volume must be greater than zero.", "The standard SI unit is kg/m³."],
+    },
+    Pressure: {
+      overview: "Pressure is the amount of force acting perpendicular to each unit of area. It is calculated by dividing force by area.",
+      interpretation: "For the same force, reducing the contact area increases pressure. Increasing the area reduces pressure.",
+      tips: ["Use force in newtons (N) and area in square metres (m²) for pressure in pascals (Pa).", "Area must be greater than zero.", "1 kPa equals 1,000 Pa."],
+    },
+    "Mechanical Power": {
+      overview: "Mechanical power describes how quickly work is done or energy is transferred. Divide work by the time taken.",
+      interpretation: "Doing the same amount of work in less time requires greater power.",
+      tips: ["Work is measured in joules (J).", "Time is measured in seconds (s) for power in watts (W).", "1 kW equals 1,000 W."],
+    },
+    "Electrical Power": {
+      overview: "For a DC circuit or a suitable resistive load, electrical power is voltage multiplied by current.",
+      interpretation: "At a fixed voltage, increasing current increases the electrical power drawn or delivered.",
+      tips: ["Voltage is measured in volts (V).", "Current is measured in amperes (A).", "Power in watts is calculated as P = V × I."],
+    },
+  };
+  return explanations[formula.name] ?? {
+    overview: `${formula.name} is calculated using the relationship ${formula.equation}. The result depends on the values entered for the variables shown above.`,
+    interpretation: `The calculated value is ${formula.name.toLowerCase()} for the supplied inputs. Check that each input uses a unit compatible with the formula and that the result unit is appropriate for the quantity.`,
+    tips: ["Check the meaning and unit of every input before calculating.", "Keep units dimensionally consistent.", "Round the displayed answer only after completing the calculation."],
+  };
+}
+
 function App() {
   const [section, setSection] = useState<Section>("Dashboard");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [search, setSearch] = useState("");
+  const [libraryCategory, setLibraryCategory] = useState("All categories");
+  const [calculatorCategory, setCalculatorCategory] = useState("All categories");
+  const [unitDimensions, setUnitDimensions] = useState<Record<string, string[]>>({});
+  const [unitCount, setUnitCount] = useState(0);
+  const [convertValue, setConvertValue] = useState("1");
+  const [convertDimension, setConvertDimension] = useState("length");
+  const [convertFrom, setConvertFrom] = useState("m");
+  const [convertTo, setConvertTo] = useState("cm");
+  const [inputUnits, setInputUnits] = useState<Record<string, string>>({});
+  const [outputUnit, setOutputUnit] = useState("");
+  const [convertResult, setConvertResult] = useState<number | null>(null);
+  const [convertError, setConvertError] = useState("");
+  const [convertLoading, setConvertLoading] = useState(false);
+  const [formulas, setFormulas] = useState<Formula[]>(fallbackFormulas);
+  const [formulaLoadError, setFormulaLoadError] = useState("");
+  const [solutionSteps, setSolutionSteps] = useState<SolutionStep[]>([]);
+  const [expandedSolutionStep, setExpandedSolutionStep] = useState<number | null>(null);
   const [selected, setSelected] = useState("Speed");
   const [values, setValues] = useState<Record<string, string>>({
     distance_m: "100",
@@ -207,10 +289,13 @@ function App() {
   const activeFormula =
     formulas.find((item) => item.name === selected) ?? formulas[0];
 
+  const categories = Array.from(new Set(formulas.map((item) => item.category)));
   const filteredFormulas = formulas.filter((item) =>
-    `${item.name} ${item.category} ${item.equation}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
+    (libraryCategory === "All categories" || item.category === libraryCategory) &&
+    `${item.name} ${item.category} ${item.equation} ${item.description}`.toLowerCase().includes(search.toLowerCase()),
+  );
+  const calculatorFormulas = formulas.filter((item) =>
+    calculatorCategory === "All categories" || item.category === calculatorCategory,
   );
 
   function resetCalculation() {
@@ -218,10 +303,13 @@ function App() {
     setResultUnit("");
     setError("");
     setResultMessage("");
+    setSolutionSteps([]);
   }
 
   function selectFormula(name: string) {
     setSelected(name);
+    const nextFormula = formulas.find((item) => item.name === name);
+    if (nextFormula) setOutputUnit(nextFormula.unit);
     resetCalculation();
   }
 
@@ -242,12 +330,105 @@ function App() {
 
   useEffect(() => {
     void checkApiConnection();
+    void loadFormulas();
+    void loadUnits();
   }, []);
+
+  async function loadUnits() {
+    try {
+      const response = await fetch(`${API_URL}/api/units`);
+      const data = await response.json();
+      if (!response.ok) throw new Error("Could not load supported units.");
+      setUnitDimensions(data.dimensions ?? {});
+      setUnitCount(data.count ?? 0);
+      if (data.dimensions?.length?.includes("m")) setConvertFrom("m");
+      if (data.dimensions?.length?.includes("cm")) setConvertTo("cm");
+    } catch (err) {
+      setConvertError(err instanceof Error ? err.message : "Could not load units.");
+    }
+  }
+
+  async function runConversion() {
+    setConvertError("");
+    setConvertResult(null);
+    const value = Number(convertValue);
+    if (!convertValue.trim() || !Number.isFinite(value)) {
+      setConvertError("Enter a valid number.");
+      return;
+    }
+    setConvertLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/convert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value, from_unit: convertFrom, to_unit: convertTo }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Conversion failed.");
+      setConvertResult(data.result);
+      setApiStatus("connected");
+    } catch (err) {
+      setConvertError(err instanceof Error ? err.message : "Conversion failed.");
+    } finally {
+      setConvertLoading(false);
+    }
+  }
+
+  async function loadFormulas() {
+    try {
+      const response = await fetch(`${API_URL}/api/formulas`);
+      const data = (await response.json()) as FormulaListResponse;
+      if (!response.ok || !Array.isArray(data.formulas)) {
+        throw new Error("Could not load the engineering formula library.");
+      }
+
+      const loaded: Formula[] = data.formulas.map((item) => ({
+        name: item.name,
+        category: item.category,
+        equation: item.equation,
+        description: item.description,
+        unit: item.unit,
+        endpoint: "/api/calculate",
+        inputKeys: item.input_keys,
+        fields: item.inputs.map((input) => ({
+          key: input.key,
+          label: input.label,
+          unit: input.unit,
+          dimension: input.dimension,
+          step: "any",
+        })),
+      }));
+
+      if (loaded.length > 0) {
+        setFormulas(loaded);
+        setInputUnits((current) => {
+          const next = { ...current };
+          loaded.forEach((formula) => formula.fields.forEach((field) => { if (!next[field.key]) next[field.key] = field.unit; }));
+          return next;
+        });
+        setOutputUnit((current) => current || loaded[0].unit);
+        setSelected((current) =>
+          loaded.some((item) => item.name === current) ? current : loaded[0].name,
+        );
+      }
+      setFormulaLoadError("");
+      setApiStatus("connected");
+    } catch (err) {
+      setFormulaLoadError(
+        err instanceof Error ? err.message : "Could not load formulas.",
+      );
+    }
+  }
 
   async function calculate() {
     resetCalculation();
 
     const payload: Record<string, number> = {};
+
+    if (!activeFormula) {
+      setError("No formula is available. Check the API connection.");
+      return;
+    }
 
     for (const field of activeFormula.fields) {
       const rawValue = values[field.key] ?? "";
@@ -267,17 +448,9 @@ function App() {
         return;
       }
 
-      if (
-        (activeFormula.name === "Speed" && field.key === "time_s") ||
-        (activeFormula.name === "Mechanical Power" &&
-          field.key === "time_s") ||
-        (activeFormula.name === "Density" && field.key === "volume_m3") ||
-        (activeFormula.name === "Pressure" && field.key === "area_m2")
-      ) {
-        if (numberValue <= 0) {
-          setError(`${field.label} must be greater than zero.`);
-          return;
-        }
+      if (numberValue <= 0 && ["time_s", "volume_m3", "area_m2"].includes(field.key)) {
+        setError(`${field.label} must be greater than zero.`);
+        return;
       }
 
       payload[field.key] = numberValue;
@@ -286,12 +459,16 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}${activeFormula.endpoint}`, {
+      const response = await fetch(`${API_URL}/api/calculate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: activeFormula.category,
+          formula: activeFormula.name,
+          inputs: payload,
+          input_units: Object.fromEntries(activeFormula.fields.map((field) => [field.key, inputUnits[field.key] ?? field.unit])),
+          output_unit: outputUnit || activeFormula.unit,
+        }),
       });
 
       const data = (await response.json()) as ApiResult;
@@ -316,7 +493,8 @@ function App() {
 
       setResult(data.result);
       setResultUnit(unit);
-      setResultMessage(`Calculated by the Python backend · ${unit}`);
+      setResultMessage("Calculation completed successfully.");
+      setSolutionSteps(Array.isArray(data.steps) ? data.steps : []);
       setApiStatus("connected");
       // The backend saves each successful calculation automatically.
       if (section === "History") {
@@ -326,8 +504,8 @@ function App() {
       setApiStatus("offline");
       setError(
         err instanceof Error
-          ? `${err.message} Check that the FastAPI server is running.`
-          : "Could not connect to the calculation API.",
+          ? `${err.message} Please check your connection and try again.`
+          : "Could not complete the calculation. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -409,12 +587,12 @@ function App() {
 
         <div className="sidebar-bottom">
           <div className="system-status">
-            <span className="status-dot" />
+            <span className={`status-dot ${apiStatus}`} />
             {apiStatus === "connected"
-              ? "Python API connected"
+              ? "Ready to calculate"
               : apiStatus === "offline"
-                ? "API connection unavailable"
-                : "Checking API connection"}
+                ? "Calculation service unavailable"
+                : "Checking availability"}
           </div>
 
           <button
@@ -445,12 +623,12 @@ function App() {
 
           <div className="topbar-actions">
             <span className="connection">
-              <span className="status-dot" />
+              <span className={`status-dot ${apiStatus}`} />
               {apiStatus === "connected"
-                ? "API connected"
+                ? "Ready"
                 : apiStatus === "offline"
-                  ? "API offline"
-                  : "Checking API"}
+                  ? "Service unavailable"
+                  : "Connecting"}
             </span>
 
             <button
@@ -494,8 +672,8 @@ function App() {
                     <span>Connected formulas</span>
                     <span className="stat-icon cyan">∑</span>
                   </div>
-                  <strong>06</strong>
-                  <span className="stat-note">Backend calculation endpoints</span>
+                  <strong>{formulas.length}</strong>
+                  <span className="stat-note">Available registered formulas</span>
                 </div>
 
                 <div className="stat-card">
@@ -503,8 +681,8 @@ function App() {
                     <span>Engineering domains</span>
                     <span className="stat-icon violet">⌘</span>
                   </div>
-                  <strong>06</strong>
-                  <span className="stat-note">Motion, mechanics, materials...</span>
+                  <strong>{new Set(formulas.map((item) => item.category)).size}</strong>
+                  <span className="stat-note">Engineering categories</span>
                 </div>
 
                 <div className="stat-card">
@@ -519,7 +697,7 @@ function App() {
                         ? "Offline"
                         : "Checking"}
                   </strong>
-                  <span className="stat-note">FastAPI · Python</span>
+                  <span className="stat-note">Ready for calculations</span>
                 </div>
               </div>
 
@@ -606,20 +784,32 @@ function App() {
                   <div className="panel-heading">
                     <div>
                       <h2>Calculation inputs</h2>
-                      <p>Python backend · {activeFormula.name} calculation</p>
+                      <p>{activeFormula.name} · Enter values to calculate</p>
                     </div>
                     <span className="pill">
-                      {activeFormula.category.toUpperCase()}
+                      {calculatorCategory === "All categories"
+                        ? "ALL CATEGORIES"
+                        : calculatorCategory.toUpperCase()}
                     </span>
                   </div>
 
+                  <label htmlFor="calculator-category">Engineering category</label>
+                  <select id="calculator-category" value={calculatorCategory} onChange={(event) => {
+                    const next = event.target.value;
+                    setCalculatorCategory(next);
+                    const first = formulas.find((item) => next === "All categories" || item.category === next);
+                    if (first) selectFormula(first.name);
+                  }}>
+                    <option value="All categories">All categories</option>
+                    {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+                  </select>
                   <label htmlFor="formula-select">Formula</label>
                   <select
                     id="formula-select"
                     value={selected}
                     onChange={(event) => selectFormula(event.target.value)}
                   >
-                    {formulas.map((item) => (
+                    {calculatorFormulas.map((item) => (
                       <option key={item.name} value={item.name}>
                         {item.name}
                       </option>
@@ -632,6 +822,10 @@ function App() {
                     <small>{activeFormula.description}</small>
                   </div>
 
+                  <label htmlFor="calculator-output-unit">Result unit</label>
+                  <select id="calculator-output-unit" value={outputUnit || activeFormula.unit} onChange={(event) => { setOutputUnit(event.target.value); resetCalculation(); }}>
+                    {(unitDimensions["force"] ?? []).includes(activeFormula.unit) ? (unitDimensions["force"] ?? []).map((unit) => <option key={unit} value={unit}>{unit}</option>) : (unitDimensions[Object.entries(unitDimensions).find(([, units]) => units.includes(activeFormula.unit))?.[0] ?? ""] ?? [activeFormula.unit]).map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  </select>
                   <div className="field-grid">
                     {activeFormula.fields.map((field) => (
                       <div key={field.key}>
@@ -653,7 +847,9 @@ function App() {
                               resetCalculation();
                             }}
                           />
-                          <span>{field.unit}</span>
+                          <select aria-label={`${field.label} unit`} value={inputUnits[field.key] ?? field.unit} onChange={(event) => { setInputUnits((current) => ({ ...current, [field.key]: event.target.value })); resetCalculation(); }}>
+                            {(unitDimensions[field.dimension ?? ""] ?? [field.unit]).includes(field.unit) ? (unitDimensions[field.dimension ?? ""] ?? [field.unit]).map((unit) => <option key={unit} value={unit}>{unit}</option>) : <option value={field.unit}>{field.unit}</option>}
+                          </select>
                         </div>
                       </div>
                     ))}
@@ -676,8 +872,7 @@ function App() {
                   )}
 
                   <p className="form-note">
-                    Numerical results are calculated by the Python backend.
-                    Input validation and calculation errors are reported here.
+                    Check each value and its unit before calculating. Results are shown with the selected output unit.
                   </p>
                 </section>
 
@@ -706,21 +901,73 @@ function App() {
                     {activeFormula.equation}
                   </div>
 
-                  <div className="notice">
-                    <span>ⓘ</span>
-                    <span>
-                      {apiStatus === "connected"
-                        ? "The API health check is connected. Calculations are sent to FastAPI."
-                        : "Check the FastAPI server connection before calculating."}
-                    </span>
-                  </div>
+                  {solutionSteps.length > 0 && (
+                    <div className="solution-steps">
+                      <h3>Step-by-step solution</h3>
+                      <p className="solution-instruction">
+                        Select a step to view its explanation.
+                      </p>
+                      <div className="solution-step-list">
+                        {solutionSteps.map((step, index) => {
+                          const isExpanded = expandedSolutionStep === index;
+                          return (
+                            <div
+                              className={`solution-step ${isExpanded ? "is-expanded" : ""}`}
+                              key={`${step.title}-${index}`}
+                            >
+                              <button
+                                type="button"
+                                className="solution-step-trigger"
+                                onClick={() =>
+                                  setExpandedSolutionStep(isExpanded ? null : index)
+                                }
+                                aria-expanded={isExpanded}
+                              >
+                                <span className="solution-step-number">{index + 1}</span>
+                                <strong>{step.title}</strong>
+                                <span className="solution-step-chevron" aria-hidden="true">
+                                  {isExpanded ? "−" : "+"}
+                                </span>
+                              </button>
+                              {isExpanded && (
+                                <div className="solution-step-description">
+                                  <p>{step.content}</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                  <button
-                    className="secondary-button"
-                    onClick={() => void checkApiConnection()}
-                  >
-                    Check API connection
-                  </button>
+                  {result !== null && (() => {
+                    const study = getStudyExplanation(activeFormula);
+                    return (
+                      <section className="calculation-study" aria-labelledby="calculation-study-title">
+                        <div className="eyebrow">LEARN THE CONCEPT</div>
+                        <h3 id="calculation-study-title">Understand this calculation</h3>
+                        <p className="study-overview">{study.overview}</p>
+                        <div className="study-equation">
+                          <span>Formula used</span>
+                          <strong>{activeFormula.equation}</strong>
+                        </div>
+                        <h4>What your answer means</h4>
+                        <p>{study.interpretation} The result for these inputs is <strong>{result.toLocaleString(undefined, { maximumFractionDigits: 6 })} {resultUnit}</strong>.</p>
+                        <h4>Remember</h4>
+                        <ul>
+                          {study.tips.map((tip) => <li key={tip}>{tip}</li>)}
+                        </ul>
+                        <p className="study-note">Study note: this explanation is a learning aid. For real engineering work, confirm assumptions, sign conventions and applicable standards.</p>
+                      </section>
+                    );
+                  })()}
+
+                  {apiStatus === "offline" && result === null && !error && (
+                    <div className="notice" role="status">
+                      The calculator is temporarily unavailable. Please try again in a moment.
+                    </div>
+                  )}
                 </section>
               </div>
             </>
@@ -747,6 +994,16 @@ function App() {
                 />
               </div>
 
+              <div className="library-filters">
+                <label htmlFor="library-category">Filter by category</label>
+                <select id="library-category" value={libraryCategory} onChange={(event) => setLibraryCategory(event.target.value)}>
+                  <option value="All categories">All categories</option>
+                  {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+                </select>
+                <span>{filteredFormulas.length} formulas</span>
+              </div>
+
+              {formulaLoadError && <div className="notice" role="alert">{formulaLoadError} Showing locally available formulas.</div>}
               <div className="formula-grid library-grid">
                 {filteredFormulas.map((item) => (
                   <button
@@ -773,30 +1030,30 @@ function App() {
 
           {section === "Unit Converter" && (
             <>
-              <div className="page-heading">
-                <div>
-                  <div className="eyebrow">UNIT MANAGEMENT</div>
-                  <h1>Unit converter</h1>
-                  <p>
-                    Unit conversion integration is planned as a separate step.
-                  </p>
-                </div>
-              </div>
-
-              <div className="panel placeholder-panel">
+              <div className="page-heading"><div><div className="eyebrow">UNIT MANAGEMENT</div><h1>Unit converter</h1><p>Convert compatible engineering units with the Python conversion engine.</p></div></div>
+              <section className="panel placeholder-panel">
                 <div className="placeholder-icon">⇄</div>
-                <h2>Engineering unit converter</h2>
-                <p>
-                  The existing Python unit converter has not been connected to
-                  this React interface yet.
-                </p>
-                <button
-                  className="secondary-button"
-                  onClick={() => setSection("Dashboard")}
-                >
-                  Back to dashboard
-                </button>
-              </div>
+                <h2>Convert a measurement</h2>
+                <p>{unitCount} supported units loaded from the backend.</p>
+                <label htmlFor="convert-value">Value</label>
+                <input id="convert-value" type="number" step="any" value={convertValue} onChange={(event) => { setConvertValue(event.target.value); setConvertResult(null); }} />
+                <label htmlFor="convert-dimension">Quantity type</label>
+                <select id="convert-dimension" value={convertDimension} onChange={(event) => { const dimension = event.target.value; const units = unitDimensions[dimension] ?? []; setConvertDimension(dimension); setConvertFrom(units[0] ?? ""); setConvertTo(units[1] ?? units[0] ?? ""); setConvertResult(null); setConvertError(""); }}>
+                  {Object.keys(unitDimensions).sort().map((dimension) => <option key={dimension} value={dimension}>{dimension.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase())}</option>)}
+                </select>
+                <div className="field-grid">
+                  <div><label htmlFor="convert-from">From unit</label><select id="convert-from" value={convertFrom} onChange={(event) => { setConvertFrom(event.target.value); setConvertResult(null); }}>
+                    {(unitDimensions[convertDimension] ?? []).map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  </select></div>
+                  <div><label htmlFor="convert-to">To unit</label><select id="convert-to" value={convertTo} onChange={(event) => { setConvertTo(event.target.value); setConvertResult(null); }}>
+                    {(unitDimensions[convertDimension] ?? []).map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                  </select></div>
+                </div>
+                <button className="secondary-button full-width" type="button" onClick={() => { setConvertFrom(convertTo); setConvertTo(convertFrom); setConvertResult(null); setConvertError(""); }}>⇄ Swap units</button>
+                <button className="primary-button full-width" onClick={() => void runConversion()} disabled={convertLoading}>{convertLoading ? "Converting..." : "Convert units →"}</button>
+                {convertError && <div className="notice" role="alert">⚠ {convertError}</div>}
+                {convertResult !== null && <div className="formula-preview"><span>CONVERSION RESULT</span><strong>{convertResult.toLocaleString(undefined, { maximumFractionDigits: 10 })} {convertTo}</strong><small>{convertValue} {convertFrom} = {convertResult.toLocaleString(undefined, { maximumFractionDigits: 10 })} {convertTo}</small></div>}
+              </section>
             </>
           )}
 
@@ -829,7 +1086,7 @@ function App() {
               {historyError && (
                 <div className="notice" role="alert">
                   <span>⚠</span>
-                  <span>{historyError} Check that the FastAPI server is running.</span>
+                  <span>{historyError} Please check your connection and try again.</span>
                 </div>
               )}
 
@@ -994,7 +1251,7 @@ function App() {
 
           <footer className="footer">
             <span>INDUSTRIAL ENGINEERING SUITE</span>
-            <span>React · TypeScript · FastAPI</span>
+            <span>Engineering calculation workspace</span>
           </footer>
         </div>
       </main>

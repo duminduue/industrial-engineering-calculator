@@ -4,7 +4,6 @@ import json
 import math
 
 import streamlit as st
-from engineering_calculator.education import build_solution
 from engineering_calculator.history import (
     export_history_csv,
     get_history,
@@ -291,7 +290,7 @@ if page == "Calculator":
         st.code(details["equation"], language="text")
         st.markdown("**Inputs required**")
 
-        for (label, unit), key in zip(
+        for (label, unit), _key in zip(
             details["inputs"],
             details["input_keys"],
             strict=True,

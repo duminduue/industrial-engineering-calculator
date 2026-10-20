@@ -551,6 +551,14 @@ function App() {
     window.open(`${API_URL}/api/history/export`, "_blank", "noopener,noreferrer");
   }
 
+  function exportHistoryExcel() {
+    window.open(
+      `${API_URL}/api/history/export/excel`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   function openCalculator(name?: string) {
     if (name) selectFormula(name);
     setSection("Calculator");
@@ -1080,6 +1088,14 @@ function App() {
                   >
                     ↓ Export CSV
                   </button>
+
+                  <button
+                    className="secondary-button"
+                    onClick={exportHistoryExcel}
+                    disabled={history.length === 0}
+                  >
+                    ↓ Export Excel
+                  </button>          
                 </div>
               </div>
 
@@ -1112,8 +1128,8 @@ function App() {
                     <span>Export format</span>
                     <span className="stat-icon violet">↓</span>
                   </div>
-                  <strong>CSV</strong>
-                  <span className="stat-note">Open with Excel or spreadsheets</span>
+                  <strong>CSV + Excel</strong>
+                  <span className="stat-note">Download spreadsheet reports</span>
                 </div>
               </div>
 

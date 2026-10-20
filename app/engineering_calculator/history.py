@@ -3,7 +3,12 @@ import io
 import json
 import sqlite3
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
+
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 
 DATABASE_PATH = Path("data/calculation_history.db")
 
@@ -97,5 +102,90 @@ def export_history_csv():
                 record["unit"],
             ]
         )
+
+    return output.getvalue()
+
+def export_history_excel():
+    records = get_history(limit=1000)
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Calculation History"
+
+    headers = [
+        "ID",
+        "Timestamp (UTC)",
+        "Formula",
+        "Inputs",
+        "Result",
+        "Unit",
+    ]
+
+    worksheet.append(headers)
+
+    for record in reversed(records):
+        worksheet.append(
+            [
+                record["id"],
+                record["created_at"],
+                record["formula"],
+                json.dumps(
+                    record["inputs"],
+                    ensure_ascii=False,
+                ),
+                record["result"],
+                record["unit"],
+            ]
+        )
+
+    # Professional header formatting
+    header_fill = PatternFill(
+        fill_type="solid",
+        fgColor="123047",
+    )
+    header_font = Font(
+        bold=True,
+        color="FFFFFF",
+        size=11,
+    )
+
+    for cell in worksheet[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+        )
+
+    # Automatically adjust column widths
+    for column_cells in worksheet.columns:
+        column_letter = get_column_letter(
+            column_cells[0].column
+        )
+
+        max_length = max(
+            len(str(cell.value or ""))
+            for cell in column_cells
+        )
+
+        worksheet.column_dimensions[
+            column_letter
+        ].width = min(max(max_length + 2, 12), 45)
+
+    # Make long input data readable
+    for row in worksheet.iter_rows(min_row=2):
+        row[3].alignment = Alignment(
+            vertical="top",
+            wrap_text=True,
+        )
+
+    worksheet.freeze_panes = "A2"
+    worksheet.auto_filter.ref = worksheet.dimensions
+    worksheet.sheet_view.showGridLines = False
+    worksheet.row_dimensions[1].height = 25
+
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
 
     return output.getvalue()

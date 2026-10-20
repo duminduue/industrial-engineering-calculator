@@ -3,7 +3,7 @@
 import math
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -19,6 +19,7 @@ from app.engineering_calculator.calculations import (
 from app.engineering_calculator.education import build_solution
 from app.engineering_calculator.history import (
     export_history_csv,
+    export_history_excel,
     get_history,
     save_calculation,
 )
@@ -638,4 +639,27 @@ def download_history_csv():
         iter([csv_content]),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+@app.get("/api/history/export/excel")
+def download_history_excel():
+    try:
+        excel_content = export_history_excel()
+    except (OSError, ValueError, TypeError) as error:
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to export calculation history to Excel.",
+        ) from error
+
+    filename = "industrial_engineering_calculation_history.xlsx"
+
+    return Response(
+        content=excel_content,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
     )

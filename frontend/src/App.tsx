@@ -6,11 +6,11 @@ import EngineeringGraphs from "./EngineeringGraphs";
 type Section =
   | "Dashboard"
   | "Calculator"
-  | "Formula Library"
   | "Unit Converter"
+  | "Formula Library"
+  | "Engineering Graphs"
   | "History"
-  | "AI Assistant"
-  | "Engineering Graphs";
+  | "AI Assistant";
 
 type FieldConfig = {
   key: string;
@@ -196,11 +196,11 @@ const fallbackFormulas: Formula[] = [
 const navigation: { name: Section; icon: string }[] = [
   { name: "Dashboard", icon: "▦" },
   { name: "Calculator", icon: "⌗" },
-  { name: "Formula Library", icon: "▤" },
   { name: "Unit Converter", icon: "⇄" },
+  { name: "Formula Library", icon: "▤" },
+  { name: "Engineering Graphs", icon: "⌁" },
   { name: "History", icon: "◷" },
   { name: "AI Assistant", icon: "✳" },
-  { name: "Engineering Graphs", icon: "⌁" },
 ];
 
 function getStudyExplanation(formula: Formula): { overview: string; interpretation: string; tips: string[] } {
@@ -605,16 +605,6 @@ function App() {
                 ? "Calculation service unavailable"
                 : "Checking availability"}
           </div>
-
-          <button
-            className="theme-toggle"
-            onClick={() =>
-              setTheme((current) => (current === "dark" ? "light" : "dark"))
-            }
-          >
-            <span>{theme === "dark" ? "☼" : "☾"}</span>
-            Switch to {theme === "dark" ? "light" : "dark"} mode
-          </button>
 
           <div className="profile">
             <div className="avatar">IE</div>
@@ -1044,7 +1034,7 @@ function App() {
           {section === "Unit Converter" && (
             <>
               <div className="page-heading"><div><div className="eyebrow">UNIT MANAGEMENT</div><h1>Unit converter</h1><p>Convert compatible engineering units with the Python conversion engine.</p></div></div>
-              <section className="panel placeholder-panel">
+              <section className="panel placeholder-panel unit-converter-panel">
                 <div className="placeholder-icon">⇄</div>
                 <h2>Convert a measurement</h2>
                 <p>{unitCount} supported units loaded from the backend.</p>

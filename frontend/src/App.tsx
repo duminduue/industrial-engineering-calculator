@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import "./App.css";
+import EngineeringGraphs from "./EngineeringGraphs";
 
 type Section =
   | "Dashboard"
@@ -8,7 +9,8 @@ type Section =
   | "Formula Library"
   | "Unit Converter"
   | "History"
-  | "AI Assistant";
+  | "AI Assistant"
+  | "Engineering Graphs";
 
 type FieldConfig = {
   key: string;
@@ -198,6 +200,7 @@ const navigation: { name: Section; icon: string }[] = [
   { name: "Unit Converter", icon: "⇄" },
   { name: "History", icon: "◷" },
   { name: "AI Assistant", icon: "✳" },
+  { name: "Engineering Graphs", icon: "⌁" },
 ];
 
 function getStudyExplanation(formula: Formula): { overview: string; interpretation: string; tips: string[] } {
@@ -654,7 +657,9 @@ function App() {
         </header>
 
         <div className="content">
-          {section === "Dashboard" && (
+  {section === "Engineering Graphs" && <EngineeringGraphs />}
+
+  {section === "Dashboard" && (
             <>
               <div className="page-heading">
                 <div>

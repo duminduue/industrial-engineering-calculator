@@ -468,3 +468,171 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 
 .status-dot.offline { background: #e5a64d; box-shadow: 0 0 9px #e5a64d44; }
 .status-dot.checking { background: #8492a7; box-shadow: none; }
+
+
+/* Phase 7.1 — Engineering motion graphs */
+
+.motion-input-panel {
+  margin-bottom: 22px;
+}
+
+.motion-input-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.motion-input-grid > div {
+  min-width: 0;
+}
+
+.motion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.motion-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.motion-graphs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.motion-chart-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.motion-chart-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.motion-chart-heading h2 {
+  margin: 0 0 7px;
+  font-size: 17px;
+}
+
+.motion-chart-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.motion-chart-unit {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--accent);
+  background: var(--panel-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.motion-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.motion-chart-svg {
+  display: block;
+  width: 100%;
+  min-width: 310px;
+  height: auto;
+  overflow: visible;
+}
+
+.motion-grid-line {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.motion-axis-line {
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+
+.motion-axis-text {
+  fill: var(--muted);
+  font-family: "DM Sans", sans-serif;
+  font-size: 11px;
+}
+
+.motion-axis-label {
+  fill: var(--text);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.motion-data-line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.motion-data-point {
+  fill: var(--accent);
+  stroke: var(--panel);
+  stroke-width: 1;
+}
+
+.motion-equations-panel {
+  margin-top: 22px;
+}
+
+.motion-equations-panel h2 {
+  margin-bottom: 16px;
+}
+
+.motion-equation {
+  margin: 9px 0;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--accent);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 17px;
+}
+
+@media (max-width: 1000px) {
+  .motion-input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .motion-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .motion-input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .motion-chart-card {
+    padding: 14px;
+  }
+
+  .motion-chart-heading {
+    flex-wrap: wrap;
+  }
+
+  .motion-actions button {
+    flex: 1 1 auto;
+  }
+}

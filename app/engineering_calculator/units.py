@@ -6,6 +6,7 @@ import math
 # Each unit is represented by:
 # (dimension, scale_to_base, offset_to_base)
 # Conversion: base_value = value * scale + offset
+
 UNITS = {
     # Length: base unit m
     "m": ("length", 1.0, 0.0),
@@ -36,6 +37,12 @@ UNITS = {
     "h": ("time", 3600.0, 0.0),
     "ms": ("time", 0.001, 0.0),
 
+    # Angle: base unit radian
+    "rad": ("angle", 1.0, 0.0),
+    "deg": ("angle", math.pi / 180, 0.0),
+    "°": ("angle", math.pi / 180, 0.0),
+    "rev": ("angle", 2 * math.pi, 0.0),
+
     # Mass: base unit kg
     "kg": ("mass", 1.0, 0.0),
     "g": ("mass", 0.001, 0.0),
@@ -52,6 +59,18 @@ UNITS = {
     # Acceleration: base unit m/s²
     "m/s²": ("acceleration", 1.0, 0.0),
     "ft/s²": ("acceleration", 0.3048, 0.0),
+
+    # Angular velocity: base unit rad/s
+    "rad/s": ("angular_velocity", 1.0, 0.0),
+    "deg/s": ("angular_velocity", math.pi / 180, 0.0),
+    "rpm": ("angular_velocity", 2 * math.pi / 60, 0.0),
+
+    # Angular acceleration: base unit rad/s²
+    "rad/s²": ("angular_acceleration", 1.0, 0.0),
+    "deg/s²": ("angular_acceleration", math.pi / 180, 0.0),
+
+    # Moment of inertia: base unit kg·m²
+    "kg·m²": ("moment_of_inertia", 1.0, 0.0),
 
     # Force: base unit N
     "N": ("force", 1.0, 0.0),
@@ -122,11 +141,13 @@ def convert_unit(value, from_unit, to_unit):
     """Convert a numeric value between compatible units."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("Value must be a number.")
+
     if not math.isfinite(value):
         raise ValueError("Value must be finite.")
 
     if from_unit not in UNITS:
         raise ValueError(f"Unsupported unit: {from_unit}")
+
     if to_unit not in UNITS:
         raise ValueError(f"Unsupported unit: {to_unit}")
 
@@ -166,4 +187,5 @@ def get_unit_dimension(unit):
     """Return a unit's dimension, or raise an error if unknown."""
     if unit not in UNITS:
         raise ValueError(f"Unsupported unit: {unit}")
+
     return UNITS[unit][0]

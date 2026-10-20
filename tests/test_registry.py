@@ -1,4 +1,3 @@
-
 import pytest
 
 from app.engineering_calculator.registry import (
@@ -18,6 +17,8 @@ def test_registry_contains_all_categories():
         "Thermodynamics",
         "Temperature Conversion",
         "Materials and Machine Design",
+        "Rotational Motion",
+        "Industrial Engineering",
     }
 
     assert set(FORMULA_REGISTRY) == expected_categories
@@ -26,8 +27,8 @@ def test_registry_contains_all_categories():
 def test_registry_contains_expected_number_of_formulas():
     total = sum(len(formulas) for formulas in FORMULA_REGISTRY.values())
 
-    # The expanded registry currently contains 40 formulas.
-    assert total == 47
+    # The expanded registry contains 55 formulas.
+    assert total == 55
 
 
 def test_every_formula_has_required_metadata():
@@ -145,7 +146,27 @@ def test_registry_functions_return_expected_results():
         ("Materials and Machine Design", "Factor of Safety"): ([200, 100], 2),
         ("Materials and Machine Design", "Spring Force"): ([10, 2], 20),
         ("Materials and Machine Design", "Spring Potential Energy"): ([10, 2], 20),
+
+        # Rotational Motion
+        ("Rotational Motion", "Angular Velocity"): ([10, 2], 5),
+        ("Rotational Motion", "Angular Acceleration"): ([2, 10, 4], 2),
+        ("Rotational Motion", "Rotational Kinetic Energy"): ([2, 3], 9),
+
+        # Industrial Engineering
+        ("Industrial Engineering", "Production Rate"): ([100, 2], 50),
+        ("Industrial Engineering", "Cycle Time"): ([120, 10], 12),
+        ("Industrial Engineering", "Productivity"): ([100, 20], 5),
+        (
+            "Industrial Engineering",
+            "Overall Equipment Effectiveness (OEE)",
+        ): ([90, 80, 95], 68.4),
+        (
+            "Industrial Engineering",
+            "Break-Even Quantity",
+        ): ([1000, 50, 30], 50),
     }
+
+    assert len(expected_results) == 55
 
     for (category, name), (inputs, expected) in expected_results.items():
         formula = get_formula(category, name)
@@ -160,3 +181,46 @@ def test_all_registered_functions_are_callable():
     for formulas in FORMULA_REGISTRY.values():
         for details in formulas.values():
             assert callable(details["function"])
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_category", "expected_name"),
+    [
+        ("angular velocity", "Rotational Motion", "Angular Velocity"),
+        (
+            "angular acceleration",
+            "Rotational Motion",
+            "Angular Acceleration",
+        ),
+        (
+            "rotational kinetic energy",
+            "Rotational Motion",
+            "Rotational Kinetic Energy",
+        ),
+        (
+            "production rate",
+            "Industrial Engineering",
+            "Production Rate",
+        ),
+        ("cycle time", "Industrial Engineering", "Cycle Time"),
+        ("productivity", "Industrial Engineering", "Productivity"),
+        (
+            "overall equipment effectiveness",
+            "Industrial Engineering",
+            "Overall Equipment Effectiveness (OEE)",
+        ),
+        (
+            "break even",
+            "Industrial Engineering",
+            "Break-Even Quantity",
+        ),
+    ],
+)
+def test_search_finds_new_formulas(query, expected_category, expected_name):
+    results = search_formulas(query)
+
+    assert any(
+        item["category"] == expected_category
+        and item["name"] == expected_name
+        for item in results
+    )

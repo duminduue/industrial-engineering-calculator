@@ -627,7 +627,131 @@ FORMULA_REGISTRY = {
             ["spring energy", "elastic energy", "spring"],
         ),
     },
+
+        "Rotational Motion": {
+        "Angular Velocity": _formula(
+            "Angular displacement per unit time.",
+            "ω = θ / t",
+            "rad/s",
+            [("Angular displacement", "rad"), ("Time", "s")],
+            ["angle_rad", "time_s"],
+            ["angle", "time"],
+            "angular_velocity",
+            calc.calculate_angular_velocity,
+            ["angular velocity", "rotation", "angular speed"],
+        ),
+        "Angular Acceleration": _formula(
+            "Change in angular velocity per unit time.",
+            "α = (ω₂ - ω₁) / t",
+            "rad/s²",
+            [
+                ("Initial angular velocity", "rad/s"),
+                ("Final angular velocity", "rad/s"),
+                ("Time", "s"),
+            ],
+            [
+                "initial_angular_velocity_rad_s",
+                "final_angular_velocity_rad_s",
+                "time_s",
+            ],
+            ["angular_velocity", "angular_velocity", "time"],
+            "angular_acceleration",
+            calc.calculate_angular_acceleration,
+            ["angular acceleration", "rotation", "angular motion"],
+        ),
+        "Rotational Kinetic Energy": _formula(
+            "Kinetic energy associated with rotational motion.",
+            "KE = ½Iω²",
+            "J",
+            [
+                ("Moment of inertia", "kg·m²"),
+                ("Angular velocity", "rad/s"),
+            ],
+            ["moment_of_inertia_kg_m2", "angular_velocity_rad_s"],
+            ["moment_of_inertia", "angular_velocity"],
+            "energy",
+            calc.calculate_rotational_kinetic_energy,
+            ["rotational energy", "moment of inertia", "rotation"],
+        ),
+    },
+    "Industrial Engineering": {
+        "Production Rate": _formula(
+            "Units produced per hour.",
+            "Production rate = units produced / time",
+            "units/hour",
+            [("Units produced", "units"), ("Production time", "h")],
+            ["units_produced", "time_hours"],
+            ["count", "time"],
+            "production_rate",
+            calc.calculate_production_rate,
+            ["production rate", "manufacturing", "output"],
+        ),
+        "Cycle Time": _formula(
+            "Average production time per unit.",
+            "Cycle time = total time / units produced",
+            "min/unit",
+            [("Production time", "min"), ("Units produced", "units")],
+            ["time_minutes", "units_produced"],
+            ["time", "count"],
+            "cycle_time",
+            calc.calculate_cycle_time,
+            ["cycle time", "manufacturing", "production"],
+        ),
+        "Productivity": _formula(
+            "Output divided by input.",
+            "Productivity = output / input",
+            "ratio",
+            [("Output quantity", "units"), ("Input quantity", "units")],
+            ["output_units", "input_units"],
+            ["count", "count"],
+            "dimensionless",
+            calc.calculate_productivity,
+            ["productivity", "efficiency", "output per input"],
+        ),
+        "Overall Equipment Effectiveness (OEE)": _formula(
+            "Equipment effectiveness based on availability, performance and quality.",
+            "OEE = Availability × Performance × Quality / 10000",
+            "%",
+            [
+                ("Availability", "%"),
+                ("Performance", "%"),
+                ("Quality", "%"),
+            ],
+            [
+                "availability_percent",
+                "performance_percent",
+                "quality_percent",
+            ],
+            ["dimensionless", "dimensionless", "dimensionless"],
+            "dimensionless",
+            calc.calculate_oee,
+            ["OEE", "equipment effectiveness", "availability", "quality"],
+        ),
+        "Break-Even Quantity": _formula(
+            "Units required for revenue to cover total costs.",
+            "Break-even quantity = fixed cost / (selling price - variable cost)",
+            "units",
+            [
+                ("Fixed cost", "currency"),
+                ("Selling price per unit", "currency"),
+                ("Variable cost per unit", "currency"),
+            ],
+            [
+                "fixed_cost",
+                "selling_price_per_unit",
+                "variable_cost_per_unit",
+            ],
+            ["currency", "currency", "currency"],
+            "count",
+            calc.calculate_break_even_quantity,
+            ["break even", "cost analysis", "engineering economics"],
+        ),
+    },
+
 }
+
+
+
 
 
 def search_formulas(query=""):

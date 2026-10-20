@@ -458,3 +458,122 @@ def calculate_spring_energy(spring_constant_n_m, displacement_m):
     _validate_non_negative(spring_constant_n_m=spring_constant_n_m)
     _validate_finite(displacement_m=displacement_m)
     return 0.5 * spring_constant_n_m * displacement_m**2
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Rotational Motion Calculations
+# ---------------------------------------------------------------------------
+
+@_validate_calculation_result
+def calculate_angular_velocity(angle_rad, time_s):
+    """Calculate average angular velocity in rad/s."""
+    _validate_finite(angle_rad=angle_rad, time_s=time_s)
+    _validate_non_negative(time_s=time_s)
+    if time_s == 0:
+        raise ValueError("Time must be greater than zero.")
+    return angle_rad / time_s
+
+
+@_validate_calculation_result
+def calculate_angular_acceleration(initial_angular_velocity_rad_s,
+                                   final_angular_velocity_rad_s, time_s):
+    """Calculate angular acceleration in rad/s²."""
+    _validate_finite(
+        initial_angular_velocity_rad_s=initial_angular_velocity_rad_s,
+        final_angular_velocity_rad_s=final_angular_velocity_rad_s,
+        time_s=time_s,
+    )
+    _validate_non_negative(time_s=time_s)
+    if time_s == 0:
+        raise ValueError("Time must be greater than zero.")
+    return (
+        final_angular_velocity_rad_s - initial_angular_velocity_rad_s
+    ) / time_s
+
+
+@_validate_calculation_result
+def calculate_rotational_kinetic_energy(moment_of_inertia_kg_m2,
+                                        angular_velocity_rad_s):
+    """Calculate rotational kinetic energy in joules."""
+    _validate_finite(
+        moment_of_inertia_kg_m2=moment_of_inertia_kg_m2,
+        angular_velocity_rad_s=angular_velocity_rad_s,
+    )
+    _validate_non_negative(moment_of_inertia_kg_m2=moment_of_inertia_kg_m2)
+    return 0.5 * moment_of_inertia_kg_m2 * angular_velocity_rad_s**2
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Industrial Engineering Calculations
+# ---------------------------------------------------------------------------
+
+@_validate_calculation_result
+def calculate_production_rate(units_produced, time_hours):
+    """Calculate production rate in units per hour."""
+    _validate_finite(units_produced=units_produced, time_hours=time_hours)
+    _validate_non_negative(units_produced=units_produced, time_hours=time_hours)
+    if time_hours == 0:
+        raise ValueError("Production time must be greater than zero.")
+    return units_produced / time_hours
+
+
+@_validate_calculation_result
+def calculate_cycle_time(time_minutes, units_produced):
+    """Calculate average cycle time in minutes per unit."""
+    _validate_finite(time_minutes=time_minutes, units_produced=units_produced)
+    _validate_non_negative(time_minutes=time_minutes, units_produced=units_produced)
+    if units_produced == 0:
+        raise ValueError("Units produced must be greater than zero.")
+    return time_minutes / units_produced
+
+
+@_validate_calculation_result
+def calculate_productivity(output_units, input_units):
+    """Calculate output-to-input productivity ratio."""
+    _validate_finite(output_units=output_units, input_units=input_units)
+    _validate_non_negative(output_units=output_units, input_units=input_units)
+    if input_units == 0:
+        raise ValueError("Input quantity must be greater than zero.")
+    return output_units / input_units
+
+
+@_validate_calculation_result
+def calculate_oee(availability_percent, performance_percent, quality_percent):
+    """Calculate Overall Equipment Effectiveness as a percentage."""
+    _validate_finite(
+        availability_percent=availability_percent,
+        performance_percent=performance_percent,
+        quality_percent=quality_percent,
+    )
+    for name, value in (
+        ("Availability", availability_percent),
+        ("Performance", performance_percent),
+        ("Quality", quality_percent),
+    ):
+        if not 0 <= value <= 100:
+            raise ValueError(f"{name} must be between 0 and 100.")
+    return (
+        availability_percent * performance_percent * quality_percent / 10000
+    )
+
+
+@_validate_calculation_result
+def calculate_break_even_quantity(fixed_cost, selling_price_per_unit,
+                                  variable_cost_per_unit):
+    """Calculate break-even units; selling price must exceed variable cost."""
+    _validate_finite(
+        fixed_cost=fixed_cost,
+        selling_price_per_unit=selling_price_per_unit,
+        variable_cost_per_unit=variable_cost_per_unit,
+    )
+    _validate_non_negative(
+        fixed_cost=fixed_cost,
+        selling_price_per_unit=selling_price_per_unit,
+        variable_cost_per_unit=variable_cost_per_unit,
+    )
+    contribution = selling_price_per_unit - variable_cost_per_unit
+    if contribution <= 0:
+        raise ValueError(
+            "Selling price must be greater than variable cost per unit."
+        )
+    return fixed_cost / contribution

@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from app.engineering_calculator.reports import generate_calculation_pdf
 
 from app.engineering_calculator.calculations import (
     calculate_density,
@@ -91,12 +92,16 @@ class ElectricalPowerRequest(BaseModel):
 # --------------------------------------------------
 
 
-class FormulaCalculationRequest(BaseModel):
-    category: str = Field(min_length=1)
-    formula: str = Field(min_length=1)
-    inputs: dict[str, Any]
-    input_units: dict[str, str] = Field(default_factory=dict)
-    output_unit: str | None = None
+class CalculationReportRequest(BaseModel):
+    formula_name: str
+    category: str = "Engineering"
+    equation: str = "Not provided"
+    inputs: dict = {}
+    input_units: dict = {}
+    result: float
+    unit: str = ""
+    steps: list = []
+    assumptions: list = []
 
 
 # --------------------------------------------------
@@ -663,3 +668,24 @@ def download_history_excel():
             "Content-Disposition": f'attachment; filename="{filename}"'
         },
     )
+
+@app.post("/api/reports/pdf")
+def download_calculation_report(request: CalculationReportRequest):
+    try:
+        report_data = request.model_dump()
+
+        pdf_bytes = generate_calculation_pdf(report_data)
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": 'attachment; filename="engineering_calculation_report.pdf"'
+            },
+        )
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate PDF report: {exc}",
+        ) from exc

@@ -1,67 +1,72 @@
-# ⚙️ Industrial Engineering Calculator
+# Industrial Engineering Calculator
 
-A Python-based engineering calculator built with **Streamlit**, designed to simplify engineering calculations, unit conversions, and learning through formula explanations.
+A Python-based engineering calculation application designed to simplify common engineering calculations, unit conversions, and formula-based problem solving through an interactive web interface.
 
-## 📌 Project Overview
+## Project Overview
 
-The Industrial Engineering Calculator is an educational engineering tool that brings commonly used engineering formulas into one application. It provides a searchable formula library, numerical calculations, unit conversion utilities, and calculation history.
+The Industrial Engineering Calculator brings engineering formulas and calculation tools together in one application. It combines a Python backend with a React frontend to provide an interactive experience for performing engineering calculations and reviewing results.
 
-The project is being developed with an emphasis on usability, code quality, automated testing, and future AI-assisted learning features.
+The project focuses on calculation accuracy, input validation, unit handling, usability, automated testing, and maintainable code.
 
-## ✨ Features
+## Features
 
 - **Engineering Formula Library** — Browse formulas across multiple engineering categories.
-- **Formula Search** — Find calculations by formula name, category, description, or supported keywords.
-- **Engineering Calculations** — Calculate results using registered Python functions.
+- **Formula Search** — Find calculations using formula names, categories, descriptions, and supported keywords.
+- **Engineering Calculations** — Perform calculations using registered Python functions.
+- **Input Validation** — Validate calculation inputs and handle invalid values with meaningful errors.
+- **Results with Units** — Display calculated results with applicable units.
 - **Unit Conversion** — Convert compatible engineering units.
-- **Educational Mode** — View formula descriptions, equations, input values, and calculation explanations.
-- **Calculation History** — Review previously saved calculations using SQLite.
+- **Educational Support** — View formula descriptions, equations, and calculation-related information.
+- **Calculation History** — Store and review calculation records using SQLite.
 - **CSV Export** — Export calculation history for further analysis.
-- **Automated Testing** — Validate calculation functions, formula registry behaviour, and history operations.
-- **Code Quality Checks** — Use Ruff to identify common Python issues and maintain consistent code quality.
+- **Automated Testing** — Test calculation functions, formula registry behaviour, and other application functionality.
+- **Code Quality Checks** — Use Ruff to identify common Python code-quality issues.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Technology | Purpose |
 |---|---|
-| Python | Calculation logic and application development |
-| Streamlit | Interactive web interface |
+| Python | Engineering calculations and backend logic |
+| FastAPI | Backend API |
+| React | Interactive frontend |
+| TypeScript | Frontend development |
 | SQLite | Local calculation history |
 | Pytest | Automated testing |
-| Ruff | Linting and code quality |
+| Ruff | Python linting |
 | Git and GitHub | Version control and project hosting |
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 industrial-engineering-calculator/
 ├── app/
 │   ├── engineering_calculator/
-│   │   ├── __init__.py
 │   │   ├── calculations.py
 │   │   ├── education.py
 │   │   ├── history.py
 │   │   ├── registry.py
 │   │   └── units.py
+│   ├── api.py
 │   ├── main.py
 │   └── streamlit_app.py
-├── data/
+├── frontend/
+│   ├── src/
+│   └── package.json
 ├── tests/
-│   ├── test_calculations.py
-│   ├── test_history.py
-│   └── test_registry.py
-├── .gitignore
-├── pyproject.toml
-└── requirements.txt
+├── data/
+├── requirements.txt
+└── pyproject.toml
 ```
 
-## 🚀 Getting Started
+*Note: This is a simplified overview of the project structure.*
+
+## Getting Started
 
 ### Prerequisites
 
-- Python 3.11 or later, subject to dependency compatibility.
-- Git.
-- A terminal or code editor such as Visual Studio Code.
+- Python and compatible project dependencies
+- Node.js and npm
+- Git
 
 ### 1. Clone the repository
 
@@ -70,102 +75,93 @@ git clone https://github.com/duminduue/industrial-engineering-calculator.git
 cd industrial-engineering-calculator
 ```
 
-### 2. Create a virtual environment
+### 2. Set up the Python backend
 
-**Windows PowerShell**
+Create and activate a virtual environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks environment activation, you can use the environment's Python executable directly instead.
-
-### 3. Install dependencies
+Install the Python dependencies:
 
 ```powershell
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-### 4. Run the application
+Start the backend API:
 
 ```powershell
-python -m streamlit run app/streamlit_app.py
+python -m uvicorn app.api:app --reload
 ```
 
-Streamlit will provide a local URL, normally `http://localhost:8501`, which you can open in your browser.
+The API normally runs at `http://127.0.0.1:8000`.
 
-## 🧪 Testing
+The interactive API documentation is normally available at `http://127.0.0.1:8000/docs`.
 
-Run the automated test suite:
+### 3. Set up the React frontend
+
+Open another terminal and navigate to the frontend directory:
 
 ```powershell
-python -m pytest tests
+cd frontend
+npm install
+npm run dev
 ```
 
-Run the code quality checks:
+Open the local URL displayed by Vite in the terminal.
+
+*Backend and frontend configuration may be required depending on the local environment.*
+
+## Testing
+
+Run the automated Python test suite from the project root:
+
+```powershell
+python -m pytest -q
+```
+
+Run Ruff checks:
 
 ```powershell
 python -m ruff check app tests
 ```
 
-Automatically fix supported Ruff issues:
+The latest recorded automated test result during development was **104 passed**. Run the test command again against the current checkout to reproduce and confirm the result.
 
-```powershell
-python -m ruff check app tests --fix
-```
+## How to Use
 
-The test suite previously reached **60 passing tests** during development. Run the commands above against the current checkout to confirm its present status.
+1. Start the backend and frontend.
+2. Open the frontend in a web browser.
+3. Search for a formula or browse the available engineering categories.
+4. Select a calculation and enter the required input values.
+5. Review the calculation result and its units.
+6. Use the unit conversion tools where applicable.
+7. Review saved calculations or export available history records when needed.
 
-## 📖 How to Use
+Available calculations and supported units depend on the registered formulas and implemented conversion rules.
 
-1. Start the Streamlit application.
-2. Open the **Calculator** page.
-3. Search for a formula or select an engineering category.
-4. Choose the required calculation.
-5. Enter the input values using the supported units.
-6. Select a compatible output unit when available.
-7. Calculate and review the result and educational explanation.
-8. Open **Calculation History** to review saved results or export them as CSV.
-9. Use **Unit Converter** to convert compatible units independently.
+## Project Status
 
-Available units and formula inputs depend on the registered formula definitions and supported conversions.
+The core application, formula registry, calculation validation, unit-related functionality, and automated test suite have been implemented.
 
-## 🗺️ Development Roadmap
+Further enhancements can be considered in future updates without changing the scope of the current completed work.
 
-- [x] Establish the Python project structure.
-- [x] Implement the initial engineering calculation functions.
-- [x] Introduce a central formula registry.
-- [x] Add calculation history and CSV export.
-- [x] Establish automated tests and Ruff checks.
-- [x] Build a Streamlit interface.
-- [x] Add unit conversion functionality.
-- [x] Introduce an initial educational solution module.
-- [ ] Expand formula-specific step-by-step solutions.
-- [ ] Improve unit coverage and conversion validation across all formulas.
-- [ ] Improve input validation, error handling, and documentation.
-- [ ] Introduce an AI-assisted engineering learning assistant.
-- [ ] Explore deployment and additional engineering tools.
+## Disclaimer
 
-## 🤖 Future AI Integration
+This application is intended for educational purposes and preliminary engineering calculations. Results depend on the formulas, assumptions, input values, and unit conventions used.
 
-A planned enhancement is an AI-assisted learning feature that can help users understand engineering concepts, interpret formulas, explain calculation steps, and learn when particular equations are appropriate.
+Independently verify calculations before using them in practical engineering work. Do not use this application as the sole basis for safety-critical engineering decisions, certified designs, or regulatory compliance.
 
-AI-generated explanations will need validation against engineering principles and the application's registered formulas.
-
-## ⚠️ Disclaimer
-
-This project is intended for educational purposes and preliminary engineering calculations. Results may depend on assumptions, unit conventions, and formula limitations.
-
-Do not rely on this application as the sole basis for safety-critical engineering decisions, certified designs, or professional compliance. Independently verify calculations before applying them in real engineering work.
-
-## 👨‍💻 Author
+## Author
 
 **Dumindu Udakara Ekanayaka**
 
 GitHub: [@duminduue](https://github.com/duminduue)
 
-## 📄 License
+Repository: [Industrial Engineering Calculator](https://github.com/duminduue/industrial-engineering-calculator)
 
-No license has been selected yet. Until a license is added, reuse and redistribution are not automatically granted by this repository's public visibility.
+## License
+
+No license has been selected yet. Public repository visibility does not automatically grant permission to reuse or redistribute the code.

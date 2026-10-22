@@ -7,7 +7,6 @@ from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from app.engineering_calculator.reports import generate_calculation_pdf
 
 from app.engineering_calculator.calculations import (
     calculate_density,
@@ -29,6 +28,7 @@ from app.engineering_calculator.registry import (
     get_formula,
     search_formulas,
 )
+from app.engineering_calculator.reports import generate_calculation_pdf
 from app.engineering_calculator.units import UNITS, convert_unit, get_unit_dimension
 
 app = FastAPI(
@@ -91,23 +91,27 @@ class ElectricalPowerRequest(BaseModel):
 # GENERIC CALCULATION REQUEST
 # --------------------------------------------------
 
-
 class CalculationReportRequest(BaseModel):
-    formula_name: str
+    formula_name: str = Field(min_length=1)
     category: str = "Engineering"
     equation: str = "Not provided"
-    inputs: dict = {}
-    input_units: dict = {}
-    result: float
+    inputs: dict = Field(default_factory=dict)
+    input_units: dict = Field(default_factory=dict)
+    result: float = Field(allow_inf_nan=False)
     unit: str = ""
-    steps: list = []
-    assumptions: list = []
+    steps: list = Field(default_factory=list)
+    assumptions: list = Field(default_factory=list)
 
+class FormulaCalculationRequest(BaseModel):
+    category: str = Field(min_length=1)
+    formula: str = Field(min_length=1)
+    inputs: dict[str, Any]
+    input_units: dict[str, str] = Field(default_factory=dict)
+    output_unit: str | None = None
 
 # --------------------------------------------------
 # SHARED HELPERS
 # --------------------------------------------------
-
 
 def build_result(formula, inputs, result, unit):
     """Validate, save, and return a calculation result."""
@@ -680,7 +684,9 @@ def download_calculation_report(request: CalculationReportRequest):
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": 'attachment; filename="engineering_calculation_report.pdf"'
+     "Content-Disposition": (
+    'attachment; filename="engineering_calculation_report.pdf"'
+)
             },
         )
 

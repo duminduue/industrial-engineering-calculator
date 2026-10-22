@@ -6,7 +6,7 @@ from xml.sax.saxutils import escape
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
     Paragraph,
@@ -96,7 +96,10 @@ def generate_calculation_pdf(report_data: dict) -> bytes:
 
     details = [
         ["Field", "Details"],
-        ["Calculation", str(report_data.get("formula_name", "Engineering Calculation"))],
+        [
+    "Calculation",
+    str(report_data.get("formula_name", "Engineering Calculation")),
+],
         ["Category", str(report_data.get("category", "Not specified"))],
         ["Equation", str(report_data.get("equation", "Not provided"))],
     ]

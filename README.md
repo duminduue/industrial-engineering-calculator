@@ -1,39 +1,35 @@
 # Industrial Engineering Calculator
 
-A Python-based engineering calculation application designed to simplify common engineering calculations, unit conversions, and formula-based problem solving through an interactive web interface.
+A full-stack engineering calculation platform built to simplify engineering formulas, unit conversions, and calculation workflows through an interactive web interface.
 
 ## Project Overview
 
-The Industrial Engineering Calculator brings engineering formulas and calculation tools together in one application. It combines a Python backend with a React frontend to provide an interactive experience for performing engineering calculations and reviewing results.
+The Industrial Engineering Calculator combines a **React and TypeScript frontend** with a **Python FastAPI backend**. It provides a central place to explore engineering formulas, perform calculations, convert units, and review calculation history.
 
-The project focuses on calculation accuracy, input validation, unit handling, usability, automated testing, and maintainable code.
+The project emphasizes input validation, maintainable code, automated testing, and a user-friendly engineering interface.
 
-## Features
+## Key Features
 
-- **Engineering Formula Library** — Browse formulas across multiple engineering categories.
-- **Formula Search** — Find calculations using formula names, categories, descriptions, and supported keywords.
-- **Engineering Calculations** — Perform calculations using registered Python functions.
-- **Input Validation** — Validate calculation inputs and handle invalid values with meaningful errors.
-- **Results with Units** — Display calculated results with applicable units.
-- **Unit Conversion** — Convert compatible engineering units.
-- **Educational Support** — View formula descriptions, equations, and calculation-related information.
-- **Calculation History** — Store and review calculation records using SQLite.
+- **Engineering Formula Library** — Browse registered formulas across engineering categories.
+- **Engineering Calculations** — Perform formula-based calculations using the Python calculation engine.
+- **Unit Converter** — Convert supported engineering units.
+- **Formula Search** — Find formulas by name, category, description, and supported keywords.
+- **Calculation History** — Save and review calculation records using SQLite.
 - **CSV Export** — Export calculation history for further analysis.
-- **Automated Testing** — Test calculation functions, formula registry behaviour, and other application functionality.
-- **Code Quality Checks** — Use Ruff to identify common Python code-quality issues.
+- **Educational Information** — Explore equations, descriptions, and relevant calculation details.
+- **Input Validation** — Handle invalid inputs with meaningful errors.
+- **Automated Testing** — Validate calculation logic and application functionality.
 
 ## Technology Stack
 
-| Technology | Purpose |
+| Area | Technologies |
 |---|---|
-| Python | Engineering calculations and backend logic |
-| FastAPI | Backend API |
-| React | Interactive frontend |
-| TypeScript | Frontend development |
-| SQLite | Local calculation history |
-| Pytest | Automated testing |
-| Ruff | Python linting |
-| Git and GitHub | Version control and project hosting |
+| Frontend | React, TypeScript, Vite |
+| Backend | Python, FastAPI |
+| Data Storage | SQLite |
+| Testing | Pytest |
+| Code Quality | Ruff |
+| Version Control | Git, GitHub |
 
 ## Project Structure
 
@@ -41,11 +37,6 @@ The project focuses on calculation accuracy, input validation, unit handling, us
 industrial-engineering-calculator/
 ├── app/
 │   ├── engineering_calculator/
-│   │   ├── calculations.py
-│   │   ├── education.py
-│   │   ├── history.py
-│   │   ├── registry.py
-│   │   └── units.py
 │   ├── api.py
 │   ├── main.py
 │   └── streamlit_app.py
@@ -53,18 +44,17 @@ industrial-engineering-calculator/
 │   ├── src/
 │   └── package.json
 ├── tests/
-├── data/
+├── docs/
+│   └── Industrial_Engineering_Calculator_Project_Report.docx
 ├── requirements.txt
 └── pyproject.toml
 ```
-
-*Note: This is a simplified overview of the project structure.*
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python and compatible project dependencies
+- Python
 - Node.js and npm
 - Git
 
@@ -75,93 +65,82 @@ git clone https://github.com/duminduue/industrial-engineering-calculator.git
 cd industrial-engineering-calculator
 ```
 
-### 2. Set up the Python backend
+### 2. Set up the backend
 
-Create and activate a virtual environment:
+Create and activate a Python virtual environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-Install the Python dependencies:
+Install dependencies:
 
-```powershell
+```bash
 python -m pip install -r requirements.txt
 ```
 
-Start the backend API:
+Start the FastAPI backend:
 
-```powershell
+```bash
 python -m uvicorn app.api:app --reload
 ```
 
-The API normally runs at `http://127.0.0.1:8000`.
+API documentation:
 
-The interactive API documentation is normally available at `http://127.0.0.1:8000/docs`.
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/api/health`
 
-### 3. Set up the React frontend
+### 3. Set up the frontend
 
-Open another terminal and navigate to the frontend directory:
+Open a second terminal:
 
-```powershell
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open the local URL displayed by Vite in the terminal.
+Open the local URL shown in the terminal by Vite.
 
-*Backend and frontend configuration may be required depending on the local environment.*
+If the frontend cannot connect to the backend, check the API base URL and CORS configuration.
 
 ## Testing
 
-Run the automated Python test suite from the project root:
+Run the Python test suite from the project root:
 
-```powershell
+```bash
 python -m pytest -q
 ```
 
-Run Ruff checks:
+**Latest verified test result during development: 104 passed.**
 
-```powershell
-python -m ruff check app tests
+Build the frontend for production:
+
+```bash
+cd frontend
+npm run build
 ```
 
-The latest recorded automated test result during development was **104 passed**. Run the test command again against the current checkout to reproduce and confirm the result.
+The frontend production build completed successfully during development. The build reported a bundle-size warning for a JavaScript chunk larger than 500 kB; this did not prevent the build from completing.
 
-## How to Use
+## Project Report
 
-1. Start the backend and frontend.
-2. Open the frontend in a web browser.
-3. Search for a formula or browse the available engineering categories.
-4. Select a calculation and enter the required input values.
-5. Review the calculation result and its units.
-6. Use the unit conversion tools where applicable.
-7. Review saved calculations or export available history records when needed.
-
-Available calculations and supported units depend on the registered formulas and implemented conversion rules.
+Read the detailed project report in [`docs/Industrial_Engineering_Calculator_Project_Report.docx`](docs/Industrial_Engineering_Calculator_Project_Report.docx).
 
 ## Project Status
 
-The core application, formula registry, calculation validation, unit-related functionality, and automated test suite have been implemented.
+The core calculation engine, formula registry, unit-related functionality, calculation history, React frontend, FastAPI API, and automated tests have been developed.
 
-Further enhancements can be considered in future updates without changing the scope of the current completed work.
+A public live demo is not currently listed. Run the application locally using the setup instructions above.
 
 ## Disclaimer
 
-This application is intended for educational purposes and preliminary engineering calculations. Results depend on the formulas, assumptions, input values, and unit conventions used.
-
-Independently verify calculations before using them in practical engineering work. Do not use this application as the sole basis for safety-critical engineering decisions, certified designs, or regulatory compliance.
+This application is intended for educational purposes and preliminary engineering calculations. Independently verify results before applying them to real engineering work. Do not rely on this application alone for safety-critical decisions, certified designs, or regulatory compliance.
 
 ## Author
 
 **Dumindu Udakara Ekanayaka**
 
-GitHub: [@duminduue](https://github.com/duminduue)
-
-Repository: [Industrial Engineering Calculator](https://github.com/duminduue/industrial-engineering-calculator)
-
-## License
-
-No license has been selected yet. Public repository visibility does not automatically grant permission to reuse or redistribute the code.
+- GitHub: [@duminduue](https://github.com/duminduue)
+- Repository: [Industrial Engineering Calculator](https://github.com/duminduue/industrial-engineering-calculator)
